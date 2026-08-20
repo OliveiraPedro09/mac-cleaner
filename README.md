@@ -13,11 +13,11 @@ App nativo em SwiftUI, sem dependências externas. Nada é enviado para lugar ne
 
 ## Requisitos
 
-| | |
-|---|---|
-| macOS | 14.0 (Sonoma) ou superior |
-| Xcode | 16 ou superior — **o Xcode completo, não só as Command Line Tools** |
-| Swift | 6.0+ (o pacote usa `swift-tools-version:6.0` e language mode v6) |
+|       |                                                                             |
+| ----- | --------------------------------------------------------------------------- |
+| macOS | 14.0 (Sonoma) ou superior                                                   |
+| Xcode | 16 ou superior —**o Xcode completo, não só as Command Line Tools** |
+| Swift | 6.0+ (o pacote usa`swift-tools-version:6.0` e language mode v6)           |
 
 O Xcode completo é necessário porque o build gera um binário universal
 (`--arch arm64 --arch x86_64`), o que exige o SDK do macOS que só vem com o Xcode.
@@ -27,7 +27,7 @@ Confira com `swift --version`.
 
 ```bash
 git clone <url-do-repo>
-cd Faxina
+cd <pasta-do-repo>/Faxina
 ./build.sh
 open build/Faxina.app
 ```
@@ -67,11 +67,11 @@ recompilação como um app diferente e a permissão precisaria ser concedida de 
 
 ## As três faixas de risco
 
-| Faixa | Significado | Exemplos |
-|---|---|---|
-| 🟢 **Risco nulo** | Cache 100% regenerável. Nenhum código, credencial ou config é afetado. | Xcode DerivedData, cache do NPM, cache HTTP do Chrome |
-| 🟠 **Regenerável com custo** | Volta, mas cobra: re-download pela rede ou perda de estado de UI. | Repositório Maven, modelos do HuggingFace, workspaceStorage do VS Code |
-| 🔴 **Dados de usuário** | Conteúdo seu. Só apague sabendo que existe cópia. | Disco da VM do Docker (leva volumes junto) |
+| Faixa                              | Significado                                                               | Exemplos                                                                |
+| ---------------------------------- | ------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| 🟢**Risco nulo**             | Cache 100% regenerável. Nenhum código, credencial ou config é afetado. | Xcode DerivedData, cache do NPM, cache HTTP do Chrome                   |
+| 🟠**Regenerável com custo** | Volta, mas cobra: re-download pela rede ou perda de estado de UI.         | Repositório Maven, modelos do HuggingFace, workspaceStorage do VS Code |
+| 🔴**Dados de usuário**      | Conteúdo seu. Só apague sabendo que existe cópia.                      | Disco da VM do Docker (leva volumes junto)                              |
 
 Selecionar qualquer item vermelho obriga a digitar `APAGAR` antes do botão liberar.
 
@@ -94,23 +94,23 @@ Faxina/
 
 ### Model — o que existe
 
-**[Catalog.swift](Sources/Faxina/Model/Catalog.swift)** — o coração do projeto e o único
+**[Catalog.swift](Faxina/Sources/Faxina/Model/Catalog.swift)** — o coração do projeto e o único
 arquivo que a maioria das contribuições vai tocar. 40+ alvos declarados, agrupados por
 ecossistema (Node, JVM, Go, Rust, Xcode, Android, editores, navegadores, apps, sistema).
 Cada entrada carrega `what` (função técnica) e `consequence` (impacto prático) — são esses
 textos que aparecem na UI.
 
-**[Target.swift](Sources/Faxina/Model/Target.swift)** — o tipo de um alvo, e o enum `Source`
+**[Target.swift](Faxina/Sources/Faxina/Model/Target.swift)** — o tipo de um alvo, e o enum `Source`
 que define como seus caminhos são descobertos: `.paths` (literais), `.glob` (padrão com `*`)
 ou `.provider` (lógica dedicada). Aqui também vivem `Command`, para alvos que exigem uma
 ferramenta externa em vez de `rm`, e as flags `blockingApps` / `requiresAdmin`.
 
-**[Risk.swift](Sources/Faxina/Model/Risk.swift)** — as três faixas, com título, descrição,
+**[Risk.swift](Faxina/Sources/Faxina/Model/Risk.swift)** — as três faixas, com título, descrição,
 cor e ícone. A ordem importa: a limpeza sempre executa do mais seguro para o mais arriscado.
 
 ### Core — como funciona
 
-**[SafetyGuard.swift](Sources/Faxina/Core/SafetyGuard.swift)** — **leia este primeiro se
+**[SafetyGuard.swift](Faxina/Sources/Faxina/Core/SafetyGuard.swift)** — **leia este primeiro se
 quer confiar no app.** É a última linha de defesa, e roda duas vezes: na varredura e de
 novo imediatamente antes de cada remoção, sobre o caminho já resolvido. Sete regras, e um
 caminho precisa passar em todas:
@@ -127,55 +127,55 @@ caminho precisa passar em todas:
 Recusa não é silenciosa: cada caminho barrado aparece na UI e no relatório com a regra que
 o barrou.
 
-**[Providers.swift](Sources/Faxina/Core/Providers.swift)** — resolve os alvos que exigem
+**[Providers.swift](Faxina/Sources/Faxina/Core/Providers.swift)** — resolve os alvos que exigem
 decisão em vez de um caminho fixo: "as versões antigas", "os órfãos", "tudo menos o atual".
 Cobre Node via nvm (preserva sempre a default e a maior de cada major), simuladores iOS,
 DeviceSupport, IDEs JetBrains, Discord e archives do Xcode com mais de 60 dias. Traz uma
 `struct Version` própria para ordenar corretamente `26.5 < 26.10`.
 
-**[Scanner.swift](Sources/Faxina/Core/Scanner.swift)** — resolve cada alvo em caminhos
+**[Scanner.swift](Faxina/Sources/Faxina/Core/Scanner.swift)** — resolve cada alvo em caminhos
 concretos, passa pela guarda antes de sequer medir, e emite resultados por `AsyncStream`
 com paralelismo limitado a 4 — por isso a lista se preenche progressivamente.
 
-**[Sizer.swift](Sources/Faxina/Core/Sizer.swift)** — mede blocos alocados em disco, não
+**[Sizer.swift](Faxina/Sources/Faxina/Core/Sizer.swift)** — mede blocos alocados em disco, não
 tamanho lógico (a mesma conta que o `du` faz). Cede o processador a cada 8192 arquivos para
 manter a UI viva e permitir cancelamento.
 
-**[Cleaner.swift](Sources/Faxina/Core/Cleaner.swift)** — executa. Revalida pela guarda,
+**[Cleaner.swift](Faxina/Sources/Faxina/Core/Cleaner.swift)** — executa. Revalida pela guarda,
 mede antes, remove, mede depois: o espaço liberado que aparece no relatório é **medido de
 fato**, não estimado. Três caminhos de remoção: comando externo (simuladores exigem
 `simctl delete`, apagar o diretório corromperia o índice do CoreSimulator), `rm` com
 privilégio de admin (só para os wallpapers root-owned do macOS), ou `FileManager` normal.
 
-**[BigDirs.swift](Sources/Faxina/Core/BigDirs.swift)** — alimenta a aba Descobertas. Existe
+**[BigDirs.swift](Faxina/Sources/Faxina/Core/BigDirs.swift)** — alimenta a aba Descobertas. Existe
 porque catálogo fixo é o ponto cego de todo limpador: numa máquina real os maiores
 consumidores são específicos dela.
 
-**Auxiliares** — [Paths.swift](Sources/Faxina/Core/Paths.swift) (expansão de `~` e um glob
-próprio, sem depender de shell), [Shell.swift](Sources/Faxina/Core/Shell.swift) (subprocessos;
+**Auxiliares** — [Paths.swift](Faxina/Sources/Faxina/Core/Paths.swift) (expansão de `~` e um glob
+próprio, sem depender de shell), [Shell.swift](Faxina/Sources/Faxina/Core/Shell.swift) (subprocessos;
 lê os pipes antes do `waitUntilExit` para não travar com saída grande),
-[DiskInfo.swift](Sources/Faxina/Core/DiskInfo.swift) (mede `/System/Volumes/Data`, que é onde
-o espaço real está em APFS), [RunningApps.swift](Sources/Faxina/Core/RunningApps.swift)
+[DiskInfo.swift](Faxina/Sources/Faxina/Core/DiskInfo.swift) (mede `/System/Volumes/Data`, que é onde
+o espaço real está em APFS), [RunningApps.swift](Faxina/Sources/Faxina/Core/RunningApps.swift)
 (detecta e encerra apps que bloqueiam um alvo),
-[ReportWriter.swift](Sources/Faxina/Core/ReportWriter.swift) (relatório Markdown).
+[ReportWriter.swift](Faxina/Sources/Faxina/Core/ReportWriter.swift) (relatório Markdown).
 
 ### Views
 
-[RootView.swift](Sources/Faxina/Views/RootView.swift) monta as duas abas e o rodapé de ação,
+[RootView.swift](Faxina/Sources/Faxina/Views/RootView.swift) monta as duas abas e o rodapé de ação,
 e reavalia a cada 3s quais apps bloqueadores estão abertos — os avisos somem sozinhos quando
-você fecha o app. [ConfirmSheet.swift](Sources/Faxina/Views/ConfirmSheet.swift) é a última
+você fecha o app. [ConfirmSheet.swift](Faxina/Sources/Faxina/Views/ConfirmSheet.swift) é a última
 tela antes de qualquer remoção, com caminho por caminho e a confirmação digitada.
-[TargetRow.swift](Sources/Faxina/Views/TargetRow.swift) é onde `what` e `consequence` viram
-texto na tela. As demais: [CatalogView](Sources/Faxina/Views/CatalogView.swift),
-[DiscoveryView](Sources/Faxina/Views/DiscoveryView.swift),
-[DiskHeader](Sources/Faxina/Views/DiskHeader.swift),
-[ResultsView](Sources/Faxina/Views/ResultsView.swift).
+[TargetRow.swift](Faxina/Sources/Faxina/Views/TargetRow.swift) é onde `what` e `consequence` viram
+texto na tela. As demais: [CatalogView](Faxina/Sources/Faxina/Views/CatalogView.swift),
+[DiscoveryView](Faxina/Sources/Faxina/Views/DiscoveryView.swift),
+[DiskHeader](Faxina/Sources/Faxina/Views/DiskHeader.swift),
+[ResultsView](Faxina/Sources/Faxina/Views/ResultsView.swift).
 
 ---
 
 ## Adicionando um alvo ao catálogo
 
-Na prática é uma entrada em [Catalog.swift](Sources/Faxina/Model/Catalog.swift):
+Na prática é uma entrada em [Catalog.swift](Faxina/Sources/Faxina/Model/Catalog.swift):
 
 ```swift
 Target(id: "ferramenta.cache", name: "Cache da Ferramenta", group: "Grupo", risk: .safe,
@@ -199,4 +199,27 @@ aparecem, e a recusa fica registrada no relatório.
 
 ## Licença
 
-MIT — veja [LICENSE](../LICENSE).
+Copyright © 2026 Pedro Martins de Oliveira.
+
+Distribuído sob a **GNU Affero General Public License v3.0** — veja [LICENSE](LICENSE).
+
+Na prática, para quem só quer usar: baixe, compile, rode, modifique à vontade, sem custo.
+
+Para quem quer **redistribuir ou oferecer como serviço**: a AGPL exige que o código-fonte
+completo do que você distribuir — incluindo suas modificações — seja disponibilizado sob
+esta mesma licença. A parte "Affero" fecha a brecha do SaaS: rodar uma versão modificada
+em servidor, acessível pela rede, também conta como distribuição.
+
+### Licenciamento comercial
+
+Se você quer usar o Faxina, no todo ou em parte, dentro de um produto proprietário — sem
+abrir o código do seu produto, como a AGPL exigiria — **existe uma licença comercial
+disponível**. Entre em contato para negociar os termos.
+
+📧 pedromartinsoliveira9@gmail.com
+
+### Contribuindo
+
+Ao enviar um pull request, você concede ao autor o direito de licenciar sua contribuição
+tanto sob a AGPL-3.0 quanto sob a licença comercial. Isso é o que mantém o modelo duplo
+possível — sem isso, cada contribuidor teria poder de veto sobre o licenciamento comercial.
